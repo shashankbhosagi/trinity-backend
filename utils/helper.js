@@ -77,8 +77,8 @@ async function generatePublicUrl(fileId) {
       fields: "webViewLink, webContentLink",
     });
 
-    return result.data.webViewLink; // TO view online file
-    // return result.data.webContentLink; //To download
+    // return result.data.webViewLink; // TO view online file
+    return result.data.webContentLink; //To download
   } catch (error) {
     console.log(error.message);
     throw error;
