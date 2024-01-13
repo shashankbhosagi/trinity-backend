@@ -5,15 +5,17 @@ dotenv.config();
 
 const port = process.env.PORT || 3000;
 const entries = require("./routes/entries");
+const forms = require("./routes/forms");
 const cors = require("cors");
 const connectDB = require("./db/connect");
 
-//middelware
+//middle-ware
 app.use(express.json());
 app.use(cors());
 
 //routes
 app.use("/entries", entries);
+app.use("/forms", forms);
 
 app.get("/", (req, res) => {
   res.json({

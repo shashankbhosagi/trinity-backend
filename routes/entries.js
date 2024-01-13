@@ -7,6 +7,7 @@ const {
   increaseLike,
   decreaseLike,
 } = require("../controllers/entriesController");
+const { contactUs } = require("../controllers/formsController");
 
 router.route("/submit").post(sendData);
 router.route("/all").get(getAllData);
