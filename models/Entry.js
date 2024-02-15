@@ -5,22 +5,27 @@ const entrySchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  mail: {
+    type: String,
+    required: true,
+  },
   time: {
     type: Date,
     default: Date.now,
   },
-  likes: {
-    type: Number,
-    default: 0,
-  },
   feedback: {
     type: String,
+    required: true,
+  },
+  tagWord: {
+    type: String,
+    required: true,
   },
   thumbnailImage: {
     type: String,
     required: true,
   },
-  glbFile: {
+  projectLink: {
     type: String,
     required: true,
   },

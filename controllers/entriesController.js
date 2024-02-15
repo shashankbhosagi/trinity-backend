@@ -1,62 +1,40 @@
 const Entry = require("../models/Entry");
-const fs = require("fs");
 
-const {
-  createFolder,
-  uploadFileToDrive,
-  generatePublicUrl,
-  upload, // Include Multer instance
-} = require("../utils/helper");
-const formidable = require("formidable");
+const sendData = async (req, res) => {
+  try {
+    const { name, mail, feedback, tagWord, thumbnailImage, projectLink } =
+      req.body;
+    const existingName = await Entry.findOne({ name });
+    const existingMail = await Entry.findOne({ mail });
 
-const sendData = (req, res) => {
-  const form = new formidable.IncomingForm();
-
-  form.parse(req, async (err, fields, files) => {
-    try {
-      const name = fields.name[0];
-      const feedback = fields.feedback[0];
-      const folderId = await createFolder(name);
-
-      const thumbnailFile = files.thumbnail[0];
-      const glbFile = files.glbFile[0];
-
-      const thumbnailFilePath = thumbnailFile.filepath;
-      const glbFilePath = glbFile.filepath;
-
-      const thumbnailFileId = await uploadFileToDrive(
-        thumbnailFile.originalFilename,
-        thumbnailFile.mimetype,
-        folderId,
-        fs.readFileSync(thumbnailFilePath)
-      );
-
-      const glbFileId = await uploadFileToDrive(
-        glbFile.originalFilename,
-        glbFile.mimetype,
-        folderId,
-        fs.readFileSync(glbFilePath)
-      );
-
-      const thumbnailUrl = await generatePublicUrl(thumbnailFileId);
-      const glbUrl = await generatePublicUrl(glbFileId);
-
-      const newEntry = new Entry({
-        name,
-        feedback,
-        thumbnailImage: thumbnailUrl,
-        glbFile: glbUrl,
-      });
-
-      const savedEntry = await newEntry.save();
-      res
-        .status(201)
-        .json({ message: "Data submitted successfully", data: savedEntry });
-    } catch (error) {
-      console.error(error);
-      return res.status(500).json({ error: "Failed to parse form data." });
+    if (existingName) {
+      return res.status(404).json({ message: "User name already exists!" });
     }
-  });
+
+    if (existingMail) {
+      return res.status(404).json({ message: "User mail already exists!" });
+    }
+
+    const newProject = new Entry({
+      name,
+      mail,
+      feedback,
+      tagWord,
+      thumbnailImage,
+      projectLink,
+    });
+
+    // Save the new team to the database
+    const savedProject = await newProject.save();
+
+    res
+      .status(201)
+      .json({ message: "Project added successfully.", project: savedProject });
+
+  } catch (error) {
+    console.error("Login error:", error);
+    res.status(500).json({ message: "Fail to save!", error: error.message });
+  }
 };
 const getAllData = async (req, res) => {
   try {
@@ -65,6 +43,37 @@ const getAllData = async (req, res) => {
     //   return res.status(204).json({ message: "No data to show" });
     // }
     res.status(200).json({ message: "All data retrived!", data: entries });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server Error" });
+  }
+};
+
+const getPaginationData = async (req, res) => {
+  try {
+    // Get current page number from the query parameters
+    const currPageNumber = parseInt(req.query.page);
+
+    const pageLimit = 11;
+
+    // Calculate the skip value based on the current page and page limit
+    const skip = currPageNumber * pageLimit;
+
+    // Query the database using skip and limit
+    const entries = await Entry.find().skip(skip).limit(pageLimit);
+
+    res.status(200).json(entries);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server Error" });
+  }
+};
+
+const getEntriesCount = async (req, res) => {
+  try {
+    // Get the total number of entries
+    const totalEntries = await Entry.countDocuments();
+    res.status(200).json(totalEntries);
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Server Error" });
@@ -133,4 +142,6 @@ module.exports = {
   getSingleData,
   increaseLike,
   decreaseLike,
+  getPaginationData,
+  getEntriesCount,
 };
